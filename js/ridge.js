@@ -1,11 +1,13 @@
 // ridge regression functions
-var Ridge = function(X,y,lambda){
+var Ridge = function(lambda){
     var obj = this;
     obj.X = X;
     obj.y = y;
     obj.lambda = lambda;
     obj.beta = null;
-    obj.train = function(){
+    obj.train = function(X,y){
+        obj.X = X;
+        obj.y = y;
         // ridge regression
         // X'X + lambda*I
         var XtX = numeric.dot(numeric.transpose(obj.X),obj.X);
@@ -29,13 +31,20 @@ var Ridge = function(X,y,lambda){
         var R2 = 1 - SSR/SST;
         return R2;
     }
+    obj.scorePredictions = function(y,y_pred){
+        var y_mean = numeric.sum(y)/y.length;
+        var SST = numeric.sum(numeric.pow(numeric.sub(y,y_mean),2));
+        var SSR = numeric.sum(numeric.pow(numeric.sub(y,y_pred),2));
+        var R2 = 1 - SSR/SST;
+        return R2;
+    }
 }
 
 //test 
 var X = [[1,1],[1,2],[1,3]];
 var y = [3,5,7];
 var lambda = 10;
-var ridge = new Ridge(X,y,lambda);
-console.log(ridge.train());
+var ridge = new Ridge(lambda);
+console.log(ridge.train(X,y));
 console.log(ridge.predict(X));
 console.log(ridge.score(X,y));

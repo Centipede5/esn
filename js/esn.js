@@ -8,6 +8,7 @@ var ESN = function(){
     obj.n_outputs = 0;
     obj.node_states = null;
     obj.leak_rate = 0.5;
+    obj.ridge = new Ridge(0.1);
     obj.init = function(input_weights,internal_weights,output_weights){
         obj.n_inputs = input_weights[0].length;
         obj.n_internal_units = internal_weights.length;
@@ -42,13 +43,33 @@ var ESN = function(){
     }
     // this function runs after update
     obj.predict = function(input){
-        
+        return obj.ridge.predict([obj.node_states])[0];
     }
-    obj.train = function(inputs,outputs){
-        for(var i=0;i<inputs.length;i++){
-            
-
+    obj.clearNodeStates = function(){
+        for(var i=0;i<obj.n_internal_units;i++){
+            obj.node_states[i] = 0;
         }
+    }
+    obj.train = function(inputs,outputs,ndrop){
+        var X = [];
+        var y = [];
+        for(var i=0;i<inputs.length;i++){
+            obj.update(inputs[i]);
+            if(i >= ndrop){
+                X.push(obj.node_states);
+                y.push(outputs[i]);
+            }
+        }
+        obj.ridge.train(X,y);
+        console.log('training score: ',obj.ridge.score(X,y));
+    }
+    obj.run = function(inputs){
+        var y = [];
+        for(var i=0;i<inputs.length;i++){
+            obj.update(inputs[i]);
+            y.push(obj.predict());
+        }
+        return y;
     }
     // convert to dot diagram
     obj.toDot = function(){

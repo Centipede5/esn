@@ -8,14 +8,16 @@
     <script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
     <script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
     <script src="https://colorjs.io/dist/color.global.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 <body>
     <div id="graph" style="text-align: center;"></div>
+    <canvas id="myChart"></canvas>
 <script>
+    const ctx = document.getElementById('myChart');
     var internalWeightsJSON = '[[0.4394751595716884, 0.0, 0.0, 0.0, 0.0, 0.0, 0.01761664721601199, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.03204609124701525, -0.40768108772527434, 0.0, 0.0354136073730271, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5790113304081693, -0.3247880593003618, 0.0, 0.5829955537184418], [-0.44954499023912836, 0.0, 0.0, 0.0, 0.0, -0.3450368253834918, 0.0, 0.0, -0.39556636909158166, -0.6219384119617039], [0.0, 0.0, 0.0, 0.0, 0.0, -0.4767810542402288, 0.0, 0.27641118410735954, 0.0, 0.0], [-0.2587241153756658, 0.3929605424407632, -0.1507827472455856, 0.20057898955655412, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.3000135904955219, 0.0, 0.0, 0.0, 0.0, 0.0, -0.33056149850876704, 0.0, 0.0, 0.0], [-0.41579340930733805, 0.0, 0.38391140054918904, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5922695728459603, 0.18422711937740766], [0.0, 0.19684220762351234, 0.0, 0.0, 0.058091291244340086, 0.0, 0.0, 0.0, 0.0, 0.0]]'
-    var inputWeightsJSON = '[[-0.1, -0.1, 0.1, 0.1, 0.1, 0.1, -0.1, -0.1, 0.1, 0.1, 0.1, -0.1], [-0.1, -0.1, -0.1, 0.1, 0.1, -0.1, -0.1, -0.1, 0.1, -0.1, -0.1, 0.1], [-0.1, -0.1, 0.1, 0.1, -0.1, -0.1, 0.1, -0.1, -0.1, -0.1, -0.1, -0.1], [0.1, 0.1, -0.1, 0.1, 0.1, 0.1, -0.1, 0.1, -0.1, 0.1, 0.1, -0.1], [0.1, 0.1, 0.1, -0.1, -0.1, 0.1, 0.1, 0.1, -0.1, -0.1, -0.1, 0.1], [-0.1, -0.1, -0.1, 0.1, -0.1, -0.1, 0.1, 0.1, -0.1, 0.1, 0.1, -0.1], [0.1, 0.1, -0.1, 0.1, 0.1, 0.1, 0.1, -0.1, 0.1, 0.1, -0.1, -0.1], [-0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, -0.1, -0.1, 0.1, -0.1, 0.1], [0.1, 0.1, -0.1, -0.1, -0.1, -0.1, 0.1, 0.1, -0.1, 0.1, -0.1, -0.1], [0.1, -0.1, 0.1, -0.1, -0.1, -0.1, -0.1, -0.1, -0.1, 0.1, -0.1, -0.1]]';
+    var inputWeightsJSON = '[[-0.1], [-0.1], [-0.1], [0.1], [0.1], [0.1], [0.1], [0.1], [-0.1], [0.1]]';
     var esn = new ESN();
     esn.init(JSON.parse(inputWeightsJSON), JSON.parse(internalWeightsJSON),new Array(10).fill(0));
     
@@ -37,12 +39,58 @@
         if(zeros){
             esn.update(new Array(esn.n_inputs).fill(0));
         }else{
-            esn.update([ 2.03378593,  0.88725448,  0.05113915,  0.1723552 , -1.44996472,
-            0.54878438, -0.64183534,  0.41076715,  1.76638656, -1.07381735,
-        -1.94047548,  0.01970831]);
+            esn.update([ 2.03378593]);
         }
         render();
     }
+    //generate training data of sin wave for 1000 steps
+    var X = [];
+    var y = [];
+    for(var i = 0; i < 1000; i++){
+        var x = (i/30) * 2 * Math.PI;
+        X.push([Math.sin(x)+(Math.random()-0.5)*0.1]);
+        y.push(Math.sin(x));
+    }
+    var X_train = X.slice(0,800);
+    var y_train = y.slice(0,800);
+    var X_test = X.slice(800,1000);
+    var y_test = y.slice(800,1000);
+    //train the ESN
+    esn.train(X_train,y_train,0);
+
+    var y_pred = esn.run(X_test);
+
+    console.log('test score: '+esn.ridge.scorePredictions(y_test,y_pred));
+
+    new Chart(
+        ctx,
+        {
+            type: 'line',
+            data: {
+                labels: Array.from(Array(X_test.length).keys()),
+                datasets: [
+                    {
+                        label: 'y_pred',
+                        data: y_pred,
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgb(255, 99, 132)',
+                        fill: false,
+                        pointRadius: 0,
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'y_test',
+                        data: y_test,
+                        borderColor: 'rgb(54, 162, 235)',
+                        backgroundColor: 'rgb(54, 162, 235)',
+                        fill: false,
+                        pointRadius: 0,
+                        borderWidth: 1
+                    }
+                ]
+            }
+        }
+    )
 
     
 </script>
