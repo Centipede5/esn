@@ -1,0 +1,50 @@
+<html>
+<head>
+    <script src="js/lib/math.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <script src="js/esn.js"></script>
+    <script src="js/ridge.js"></script>
+    <script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
+    <script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
+    <script src="https://colorjs.io/dist/color.global.js"></script>
+    
+
+</head>
+<body>
+    <div id="graph" style="text-align: center;"></div>
+<script>
+    var internalWeightsJSON = '[[0.4394751595716884, 0.0, 0.0, 0.0, 0.0, 0.0, 0.01761664721601199, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.03204609124701525, -0.40768108772527434, 0.0, 0.0354136073730271, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5790113304081693, -0.3247880593003618, 0.0, 0.5829955537184418], [-0.44954499023912836, 0.0, 0.0, 0.0, 0.0, -0.3450368253834918, 0.0, 0.0, -0.39556636909158166, -0.6219384119617039], [0.0, 0.0, 0.0, 0.0, 0.0, -0.4767810542402288, 0.0, 0.27641118410735954, 0.0, 0.0], [-0.2587241153756658, 0.3929605424407632, -0.1507827472455856, 0.20057898955655412, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.3000135904955219, 0.0, 0.0, 0.0, 0.0, 0.0, -0.33056149850876704, 0.0, 0.0, 0.0], [-0.41579340930733805, 0.0, 0.38391140054918904, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5922695728459603, 0.18422711937740766], [0.0, 0.19684220762351234, 0.0, 0.0, 0.058091291244340086, 0.0, 0.0, 0.0, 0.0, 0.0]]'
+    var inputWeightsJSON = '[[-0.1, -0.1, 0.1, 0.1, 0.1, 0.1, -0.1, -0.1, 0.1, 0.1, 0.1, -0.1], [-0.1, -0.1, -0.1, 0.1, 0.1, -0.1, -0.1, -0.1, 0.1, -0.1, -0.1, 0.1], [-0.1, -0.1, 0.1, 0.1, -0.1, -0.1, 0.1, -0.1, -0.1, -0.1, -0.1, -0.1], [0.1, 0.1, -0.1, 0.1, 0.1, 0.1, -0.1, 0.1, -0.1, 0.1, 0.1, -0.1], [0.1, 0.1, 0.1, -0.1, -0.1, 0.1, 0.1, 0.1, -0.1, -0.1, -0.1, 0.1], [-0.1, -0.1, -0.1, 0.1, -0.1, -0.1, 0.1, 0.1, -0.1, 0.1, 0.1, -0.1], [0.1, 0.1, -0.1, 0.1, 0.1, 0.1, 0.1, -0.1, 0.1, 0.1, -0.1, -0.1], [-0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, -0.1, -0.1, 0.1, -0.1, 0.1], [0.1, 0.1, -0.1, -0.1, -0.1, -0.1, 0.1, 0.1, -0.1, 0.1, -0.1, -0.1], [0.1, -0.1, 0.1, -0.1, -0.1, -0.1, -0.1, -0.1, -0.1, 0.1, -0.1, -0.1]]';
+    var esn = new ESN();
+    esn.init(JSON.parse(inputWeightsJSON), JSON.parse(internalWeightsJSON),new Array(10).fill(0));
+    
+    var color = new Color("p3", [0, 1, 0]);
+    var redgreen = color.range("red", {
+        space: "srgb", // interpolation space
+        outputSpace: "srgb"
+    });
+    // window.colorInterpolation = function(t){
+    //     return redgreen(t).toString({format: "hex"});
+    // }
+    
+    window.render = function(){
+        d3.select("#graph").graphviz().engine('neato')
+        .dot(esn.toDot()).render();
+    }
+    window.render();
+    function updateAndRender(zeros){
+        if(zeros){
+            esn.update(new Array(esn.n_inputs).fill(0));
+        }else{
+            esn.update([ 2.03378593,  0.88725448,  0.05113915,  0.1723552 , -1.44996472,
+            0.54878438, -0.64183534,  0.41076715,  1.76638656, -1.07381735,
+        -1.94047548,  0.01970831]);
+        }
+        render();
+    }
+
+    
+</script>
+</body> 
+</html>
